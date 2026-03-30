@@ -2831,8 +2831,8 @@ void recv_data_frame(wifi_interface_info_t *interface)
 
         if (ethhdr.h_proto == ntohs(9001)) {
             if (vap->vap_mode == wifi_vap_mode_ap) {
-                int ret;
-                struct nl_msg *msg;
+             //   int ret;
+             //   struct nl_msg *msg;
                 unsigned char *data;
                 size_t shift, len;
                 u16 rtap_len;
@@ -2877,7 +2877,7 @@ void recv_data_frame(wifi_interface_info_t *interface)
                 data[10] = rssi + 1;
                 data[11] = rssi - 3;
 
-                if ((msg = nl80211_drv_cmd_msg(g_wifi_hal.nl80211_id, interface, 0, NL80211_CMD_SEND_USR_PACKET)) == NULL) {
+           /*     if ((msg = nl80211_drv_cmd_msg(g_wifi_hal.nl80211_id, interface, 0, NL80211_CMD_SEND_USR_PACKET)) == NULL) {
                     wifi_hal_error_print("%s:%d: Failed to create message\n", __func__, __LINE__);
                 } else {
                     nla_put(msg, NL80211_ATTR_FRAME, len + 68 + 4, data);
@@ -2887,7 +2887,7 @@ void recv_data_frame(wifi_interface_info_t *interface)
                         wifi_hal_error_print("%s:%d: Failed to send packet for interface: %s error: %d(%s)\n", __func__, __LINE__, interface->name, ret, strerror(-ret));
                     }
                 }
-
+*/
                 free(data);
             }
 
@@ -2895,9 +2895,9 @@ void recv_data_frame(wifi_interface_info_t *interface)
         }
 
         if (ethhdr.h_proto == ntohs(9002)) {
-            int ret;
+            //int ret;
             unsigned char *data;
-            struct nl_msg *msg;
+            //struct nl_msg *msg;
             struct sta_info *station;
             size_t shift, len;
             u16 rtap_len;
@@ -2955,7 +2955,7 @@ void recv_data_frame(wifi_interface_info_t *interface)
 
 
 
-            if ((msg = nl80211_drv_cmd_msg(g_wifi_hal.nl80211_id, interface, 0, NL80211_CMD_SEND_USR_PACKET)) == NULL) {
+ /*           if ((msg = nl80211_drv_cmd_msg(g_wifi_hal.nl80211_id, interface, 0, NL80211_CMD_SEND_USR_PACKET)) == NULL) {
                 wifi_hal_error_print("%s:%d: Failed to create message\n", __func__, __LINE__);
             } else {
                 nla_put(msg, NL80211_ATTR_FRAME, len + 66, data);
@@ -2965,7 +2965,7 @@ void recv_data_frame(wifi_interface_info_t *interface)
                     wifi_hal_error_print("%s:%d: Failed to send packet for interface: %s error: %d(%s)\n", __func__, __LINE__, interface->name, ret, strerror(-ret));
                 }
             }
-
+*/
             free(data);
 
             return;
