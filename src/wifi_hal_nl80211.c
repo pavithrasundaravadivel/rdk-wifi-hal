@@ -77,9 +77,10 @@ void wifi_drv_eapol_timeouts(wifi_interface_info_t *interface, mac_address_t sta
 #include "wpa_supplicant/config.h"
 #endif
 
-#if defined(TCXB7_PORT) || defined(TCXB8_PORT) || defined(XB10_PORT) || defined(SKYSR213_PORT) || \
-    defined(RDKB_ONE_WIFI_PROD) ||                                                                \
-    (defined(SCXER10_PORT) && (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 0)))
+#if defined(TCXB7_PORT) || defined(TCXB8_PORT) || defined(XB10_PORT) || \
+    defined(RDKB_ONE_WIFI_PROD) ||                                      \
+    ((defined(SCXER10_PORT) || defined(SKYSR213_PORT)) &&               \
+        (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 0)))
 #include <rdk_nl80211_hal.h>
 #endif
 
@@ -7959,17 +7960,18 @@ int nl80211_init_radio_info()
     for (i = 0; i < g_wifi_hal.num_radios; i++) {
         radio = &g_wifi_hal.radio_info[i];
 
+        if (radio->radio_presence == false) {
+            wifi_hal_error_print("%s:%d: Skip the Radio %d .This is sleeping in ECO mode \n",
+                __func__, __LINE__, radio->index);
+            continue;
+        }
+
         radio->capab.numSupportedFreqBand = 0;
         radio->capab.cipherSupported = 0;
         memset(radio->capab.mode, 0, sizeof(radio->capab.mode));
         memset(radio->capab.band, 0, sizeof(radio->capab.band));
         memset(radio->capab.channel_list, 0, sizeof(radio->capab.channel_list));
         memset((unsigned char *)radio->hw_modes, 0, NUM_NL80211_BANDS*sizeof(struct hostapd_hw_modes));
-
-        if (radio->radio_presence == false) {
-           wifi_hal_error_print("%s:%d: Skip the Radio %d .This is sleeping in ECO mode \n", __func__, __LINE__, radio->index);
-           continue;
-        }
 
         // get information about phy
         msg = nl80211_drv_cmd_msg(g_wifi_hal.nl80211_id, NULL, NLM_F_DUMP, NL80211_CMD_GET_WIPHY);
@@ -10058,7 +10060,8 @@ static int wifi_hal_emu_set_assoc_clients_stats_data(unsigned int vap_index, boo
             nla_put_u64(msg, RDK_VENDOR_ATTR_STA_INFO_TX_BYTES64, cli_BytesSent) < 0 ||
             nla_put_u32(msg, RDK_VENDOR_ATTR_STA_INFO_RX_RATE_MAX, stats[i].cli_MaxUplinkRate) < 0 ||
             nla_put_u64(msg, RDK_VENDOR_ATTR_STA_INFO_RX_BYTES64, cli_BytesReceived) < 0 ||
-            nla_put_u8(msg, RDK_VENDOR_ATTR_STA_INFO_SPATIAL_STREAM_NUM, stats[i].cli_activeNumSpatialStreams) < 0 ||
+            nla_put_u8(msg, RDK_VENDOR_ATTR_STA_INFO_SPATIAL_STREAM_NUM, stats[i].cli_capableNumSpatialStreams) < 0 ||
+            nla_put_u8(msg, RDK_VENDOR_ATTR_STA_INFO_ACTIVE_SPATIAL_STREAM_NUM, stats[i].cli_activeNumSpatialStreams) < 0 ||
             nla_put_u32(msg, RDK_VENDOR_ATTR_STA_INFO_TX_FRAMES, stats[i].cli_TxFrames) < 0 ||
             nla_put_u64(msg, RDK_VENDOR_ATTR_STA_INFO_RX_PACKETS64, cli_PacketsReceived) < 0 ||
             nla_put_u64(msg, RDK_VENDOR_ATTR_STA_INFO_TX_ERRORS, cli_ErrorsSent) < 0 ||
