@@ -3198,11 +3198,13 @@ void recv_data_frame(wifi_interface_info_t *interface)
         int eapol_retry_counter = get_eapol_reply_counter((uint8_t *)hdr, buflen);
         wifi_device_callbacks_t *key_callbacks = get_hal_device_callbacks();
         if (key_callbacks != NULL) {
+            unsigned int replay_counter = 0;
+            replay_counter = (eapol_retry_counter < 0) ? 0u : (unsigned int)eapol_retry_counter;
             for (int i = 0; i < key_callbacks->num_eapol_key_cbs; i++) {
                 if (key_callbacks->eapol_key_cb[i] != NULL) {
                     key_callbacks->eapol_key_cb[i](vap->vap_index, src_mac_str,
                         (eapol_type == 4) ? wifi_eapol_key_msg_m4 : wifi_eapol_key_msg_m2,
-                        (unsigned int)eapol_retry_counter);
+                        replay_counter);
                 }
             }
         }
@@ -14066,13 +14068,13 @@ send_frame_cmd:
             break;
         case WLAN_FC_STYPE_REASSOC_RESP:
             mgmt_type = WIFI_MGMT_FRAME_TYPE_REASSOC_RSP;
-            status = le_to_host16(mgmt->u.assoc_resp.status_code);
+            status = le_to_host16(mgmt->u.reassoc_resp.status_code);
             break;
         default:
             break;
         }
 
-        if (mgmt_type != WIFI_MGMT_FRAME_TYPE_INVALID) {
+        if (mgmt_type != WIFI_MGMT_FRAME_TYPE_INVALID && status != 0) {
             for (int i = 0; i < callbacks->num_statuscode_cbs; i++) {
                 if (callbacks->statuscode_cb[i] != NULL) {
                     callbacks->statuscode_cb[i](vap->vap_index, to_mac_str(mgmt->sa, src_mac_str),
@@ -15032,11 +15034,13 @@ int wifi_drv_hapd_send_eapol(
     int eapol_retry_counter = get_eapol_reply_counter(data, data_len);
     wifi_device_callbacks_t *key_callbacks = get_hal_device_callbacks();
     if (key_callbacks != NULL) {
+        unsigned int replay_counter = 0;
+        replay_counter = (eapol_retry_counter < 0) ? 0u : (unsigned int)eapol_retry_counter;
         for (int i = 0; i < key_callbacks->num_eapol_key_cbs; i++) {
             if (key_callbacks->eapol_key_cb[i] != NULL) {
                 key_callbacks->eapol_key_cb[i](vap->vap_index, dst_mac_str,
                     (eapol_type == 3) ? wifi_eapol_key_msg_m3 : wifi_eapol_key_msg_m1,
-                    (unsigned int)eapol_retry_counter);
+                    replay_counter);
             }
         }
     }
