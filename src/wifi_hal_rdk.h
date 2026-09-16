@@ -168,8 +168,6 @@ typedef enum {
     wifi_eapol_key_msg_m4 = 4
 } wifi_eapol_key_msg_t;
 
-typedef int (*wifi_eapol_key_callback)(int ap_index, char *mac,
-    wifi_eapol_key_msg_t msg_type, unsigned int replay_counter);
 
 #define DPP_SUB_AUTH_REQUEST 0
 #define DPP_SUB_AUTH_RESPONSE 1
