@@ -1525,6 +1525,10 @@ INT wifi_hal_createVAP(wifi_radio_index_t index, wifi_vap_info_map_t *map)
         wifi_hal_info_print("%s:%d: vap index:%d mode:%d vap_name:%s\n", __func__, __LINE__,
             vap->vap_index, vap->vap_mode, vap->vap_name);
         if (vap->vap_mode == wifi_vap_mode_ap) {
+            wifi_hal_info_print("BSS_EN_TRACE %s:%d: vap index:%d name:%s new enabled:%d prev enabled:%d radio configured:%d radio enabled:%d\n",
+                __func__, __LINE__, vap->vap_index, vap->vap_name, vap->u.bss_info.enabled,
+                interface->vap_info.u.bss_info.enabled, radio->configured,
+                radio->oper_param.enable);
             wifi_hal_info_print("%s:%d: vap_enable_status:%d\n", __func__, __LINE__, vap->u.bss_info.enabled);
             memcpy(vap->u.bss_info.bssid, interface->mac, sizeof(vap->u.bss_info.bssid));
         } else {
@@ -1647,6 +1651,10 @@ INT wifi_hal_createVAP(wifi_radio_index_t index, wifi_vap_info_map_t *map)
                         interface->beacon_set = 0;
                         ret = start_bss(interface);
                         interface->bss_started = true;
+                    } else {
+                        wifi_hal_info_print("BSS_EN_TRACE %s:%d: interface:%s bss not started: vap enabled:%d radio configured:%d radio enabled:%d\n",
+                            __func__, __LINE__, interface_name, vap->u.bss_info.enabled,
+                            radio->configured, radio->oper_param.enable);
                     }
                 } else {
                     ret = reload_vap_configuration(interface);
@@ -1666,6 +1674,10 @@ INT wifi_hal_createVAP(wifi_radio_index_t index, wifi_vap_info_map_t *map)
                     interface->beacon_set = 0;
                     ret = start_bss(interface);
                     interface->bss_started = true;
+                } else {
+                    wifi_hal_info_print("BSS_EN_TRACE %s:%d: interface:%s bss not started (first init): vap enabled:%d radio configured:%d radio enabled:%d\n",
+                        __func__, __LINE__, interface_name, vap->u.bss_info.enabled,
+                        radio->configured, radio->oper_param.enable);
                 }
             }
             if (radio->configured && radio->oper_param.enable) {
