@@ -12675,7 +12675,7 @@ static int scan_info_handler(struct nl_msg *msg, void *arg)
     if (bss[NL80211_BSS_INFORMATION_ELEMENTS]) {
         ie = nla_data(bss[NL80211_BSS_INFORMATION_ELEMENTS]);
         len = nla_len(bss[NL80211_BSS_INFORMATION_ELEMENTS]);
-        //wifi_hal_stats_dbg_print("[SCAN] BSSID: %s, IE LEN %d\n", bssid_str, len);
+        wifi_hal_stats_dbg_print("%s:%d: [SCAN] BSSID: %s, IE LEN %d\n", __func__, __LINE__, bssid_str, len);
         if (len > MAX_IE_ELEMENT_LEN) {
             wifi_hal_stats_error_print("[Wrong NL SCAN output] BSSID: %s, IE LEN %d\n", bssid_str, len);
             return NL_SKIP;
@@ -12683,7 +12683,7 @@ static int scan_info_handler(struct nl_msg *msg, void *arg)
     } else {
         ie = NULL;
         len = 0;
-        // wifi_hal_dbg_print("%s:%d: [SCAN] BSS info for BSSID:%s not found\n", __func__, __LINE__, key);
+        wifi_hal_stats_dbg_print("%s:%d: [SCAN] BSSID: %s has no information elements, skipped\n", __func__, __LINE__, bssid_str);
         return NL_SKIP;
     }
 
