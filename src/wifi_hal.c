@@ -1773,6 +1773,10 @@ INT wifi_hal_createVAP(wifi_radio_index_t index, wifi_vap_info_map_t *map)
 #endif // EASY_MESH_NODE
 #ifdef NL80211_ACL
             if (set_acl == 1) {
+                wifi_hal_info_print("%s:%d: [ACL] vap index:%d create/update applies acl "
+                    "enable:%d mode:%d count:%u\n", __func__, __LINE__, vap->vap_index,
+                    vap->u.bss_info.mac_filter_enable, vap->u.bss_info.mac_filter_mode,
+                    interface->acl_map ? hash_map_count(interface->acl_map) : 0);
                 nl80211_set_acl(interface);
             }
 #else
@@ -2159,7 +2163,10 @@ INT wifi_hal_addApAclDevice(INT apIndex, mac_address_t DeviceMacAddress)
 
     key = to_mac_str(DeviceMacAddress, sta_mac_str);
     
-    wifi_hal_info_print("%s:%d: Interface: %s MAC: %s\n", __func__, __LINE__, interface->name, key);
+    wifi_hal_info_print("%s:%d: [ACL] add Interface: %s MAC: %s mf_enable:%d mf_mode:%d "
+        "caller:%p\n", __func__, __LINE__, interface->name, key,
+        vap->u.bss_info.mac_filter_enable, vap->u.bss_info.mac_filter_mode,
+        __builtin_return_address(0));
 
     if (vap->vap_mode != wifi_vap_mode_ap) {
         wifi_hal_error_print("%s:%d: Not possible to add MAC ACL for STA device\n", __func__, __LINE__);
@@ -2218,7 +2225,10 @@ INT wifi_hal_addApAclDevice(INT apIndex, CHAR *DeviceMacAddress)
     }
     vap = &interface->vap_info;
 
-    wifi_hal_info_print("%s:%d: Interface: %s MAC: %s\n",  __func__, __LINE__, interface->name, DeviceMacAddress);
+    wifi_hal_info_print("%s:%d: [ACL] add Interface: %s MAC: %s mf_enable:%d mf_mode:%d "
+        "caller:%p\n", __func__, __LINE__, interface->name, DeviceMacAddress,
+        vap->u.bss_info.mac_filter_enable, vap->u.bss_info.mac_filter_mode,
+        __builtin_return_address(0));
 
     if (vap->vap_mode != wifi_vap_mode_ap) {
         wifi_hal_error_print("%s:%d: Not possible to add MAC ACL for STA device\n", __func__, __LINE__);
@@ -2283,7 +2293,10 @@ INT wifi_hal_delApAclDevice(INT apIndex, mac_address_t DeviceMacAddress)
 
     key = to_mac_str(sta_mac, sta_mac_str);
     
-    wifi_hal_info_print("%s:%d: Interface: %s MAC: %s\n", __func__, __LINE__, interface->name, key);
+    wifi_hal_info_print("%s:%d: [ACL] del Interface: %s MAC: %s mf_enable:%d mf_mode:%d "
+        "caller:%p\n", __func__, __LINE__, interface->name, key,
+        vap->u.bss_info.mac_filter_enable, vap->u.bss_info.mac_filter_mode,
+        __builtin_return_address(0));
 
     if (vap->vap_mode != wifi_vap_mode_ap) {
         wifi_hal_error_print("%s:%d: Not possible to del MAC ACL for STA device\n", __func__, __LINE__);
@@ -2334,7 +2347,10 @@ INT wifi_hal_delApAclDevice(INT apIndex, CHAR *DeviceMacAddress)
     }
     vap = &interface->vap_info;
     
-    wifi_hal_info_print("%s:%d: Interface: %s MAC: %s\n", __func__, __LINE__, interface->name, DeviceMacAddress);
+    wifi_hal_info_print("%s:%d: [ACL] del Interface: %s MAC: %s mf_enable:%d mf_mode:%d "
+        "caller:%p\n", __func__, __LINE__, interface->name, DeviceMacAddress,
+        vap->u.bss_info.mac_filter_enable, vap->u.bss_info.mac_filter_mode,
+        __builtin_return_address(0));
 
     if (vap->vap_mode != wifi_vap_mode_ap) {
         wifi_hal_error_print("%s:%d: Not possible to del MAC ACL for STA device\n", __func__, __LINE__);
@@ -4997,6 +5013,11 @@ int wifi_hal_setApMacAddressControlMode(uint32_t apIndex, uint32_t mac_filter_mo
         return RETURN_ERR;
     }
 
+    wifi_hal_info_print("%s:%d: [ACL] set mac filter mode:%d on vap:%d (was enable:%d mode:%d) "
+        "caller:%p\n", __func__, __LINE__, mac_filter_mode, apIndex,
+        vap->u.bss_info.mac_filter_enable, vap->u.bss_info.mac_filter_mode,
+        __builtin_return_address(0));
+
     switch (mac_filter_mode) {
     case 2:
         vap->u.bss_info.mac_filter_enable = true;
@@ -5045,6 +5066,11 @@ int steering_set_acl_mode(uint32_t apIndex, uint32_t mac_filter_mode)
         wifi_hal_error_print("%s:%d: sta vap:%d does not support this\n", __func__, __LINE__, vap->vap_index);
         return RETURN_ERR;
     }
+
+    wifi_hal_info_print("%s:%d: [ACL] steering set acl mode:%d on vap:%d (was enable:%d mode:%d) "
+        "caller:%p\n", __func__, __LINE__, mac_filter_mode, apIndex,
+        vap->u.bss_info.mac_filter_enable, vap->u.bss_info.mac_filter_mode,
+        __builtin_return_address(0));
 
     if (vap->u.bss_info.mac_filter_enable == true) {
         if (vap->u.bss_info.mac_filter_mode != wifi_mac_filter_mode_black_list) {

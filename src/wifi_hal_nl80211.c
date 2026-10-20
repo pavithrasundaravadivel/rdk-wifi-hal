@@ -2196,7 +2196,12 @@ int process_frame_mgmt(wifi_interface_info_t *interface, struct ieee80211_mgmt *
 #ifdef NL80211_ACL
         // If mac filter acl is enabled then we need to drop mgmt frame based on acl config
         if (is_core_acl_drop_mgmt_frame(interface, sta)) {
-            wifi_hal_dbg_print("%s:%d: Dropping probe request based on acl config\n", __func__, __LINE__);
+            wifi_hal_info_print("%s:%d: [ACL] Dropping probe request from:%s on interface:%s based on "
+                "acl config (enable:%d mode:%d count:%u)\n", __func__, __LINE__,
+                to_mac_str(sta, sta_mac_str), interface->name,
+                interface->vap_info.u.bss_info.mac_filter_enable,
+                interface->vap_info.u.bss_info.mac_filter_mode,
+                interface->acl_map ? hash_map_count(interface->acl_map) : 0);
             return -1;
         }
 #endif
