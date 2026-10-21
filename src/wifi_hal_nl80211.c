@@ -10559,6 +10559,28 @@ scan_msg_nla_put_failure:
 
 #define MAX_PWD_LEN 64
 #define MAX_SAE_GROUP 5
+
+#if !defined(CONFIG_WIFI_EMULATOR) && !defined(BANANA_PI_PORT)
+/* Backhaul-only BSS rejects association (status 12) unless the assoc request carries
+ * the Wi-Fi Alliance Multi-AP IE with the backhaul STA bit set. */
+static size_t nl80211_add_multi_ap_backhaul_sta_ie(wifi_vap_info_t *vap, u8 *buf, size_t len)
+{
+    static const u8 multi_ap_ie[] = {
+        WLAN_EID_VENDOR_SPECIFIC, 7,
+        0x50, 0x6f, 0x9a, 0x1b, /* WFA OUI + Multi-AP OUI type */
+        0x06, 0x01,             /* Multi-AP Extension subelement, length 1 */
+        0x80                    /* Backhaul STA */
+    };
+
+    if (!is_wifi_hal_vap_mesh_sta(vap->vap_index) || len < sizeof(multi_ap_ie)) {
+        return 0;
+    }
+
+    memcpy(buf, multi_ap_ie, sizeof(multi_ap_ie));
+    return sizeof(multi_ap_ie);
+}
+#endif
+
 int nl80211_connect_sta(wifi_interface_info_t *interface)
 {
     int ret;
@@ -11405,10 +11427,21 @@ int nl80211_connect_sta(wifi_interface_info_t *interface)
                 pos += interface->u.sta.wpa_sm->assoc_rsnxe_len;
             }
 #endif
+            pos += nl80211_add_multi_ap_backhaul_sta_ie(vap, pos, rsn_ie + sizeof(rsn_ie) - pos);
             if (nla_put(msg, NL80211_ATTR_IE, pos - rsn_ie, rsn_ie) < 0) {
                 wifi_hal_error_print("%s:%d: Failed to set RSN IE\n", __func__, __LINE__);
                 nlmsg_free(msg);
                 return -1;
+            }
+            {
+                char ie_hex[2 * sizeof(rsn_ie) + 1] = { 0 };
+                int ie_i, ie_len = (int)(pos - rsn_ie);
+
+                for (ie_i = 0; ie_i < ie_len && ie_i < (int)sizeof(rsn_ie); ie_i++) {
+                    snprintf(&ie_hex[2 * ie_i], 3, "%02x", rsn_ie[ie_i]);
+                }
+                wifi_hal_info_print("%s:%d: [CONNECT] interface:%s vap:%d assoc IEs len:%d hex:%s\n",
+                    __func__, __LINE__, interface->name, vap->vap_index, ie_len, ie_hex);
             }
         }
     }
