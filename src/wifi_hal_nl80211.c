@@ -24377,6 +24377,14 @@ static int get_radio_tx_power(wifi_interface_info_t *interface, ULONG *tx_power)
 
     return RETURN_OK;
 }
+/* Platforms whose driver omits the nl80211 tx power attribute override this. */
+__attribute__((weak)) INT platform_get_radio_tx_power(INT radioIndex, ULONG *tx_power)
+{
+    (void)radioIndex;
+    (void)tx_power;
+    return RETURN_ERR;
+}
+
 INT wifi_hal_getRadioTransmitPower(INT radioIndex, ULONG *tx_power)
 {
     wifi_interface_info_t *interface = NULL;
@@ -24403,6 +24411,10 @@ INT wifi_hal_getRadioTransmitPower(INT radioIndex, ULONG *tx_power)
         wifi_hal_error_print("%s:%d: Failed to get radio tx power for radio %d\n", __func__,
             __LINE__, radioIndex);
         return RETURN_ERR;
+    }
+
+    if (*tx_power == 0) {
+        platform_get_radio_tx_power(radioIndex, tx_power);
     }
 
     return RETURN_OK;

@@ -4426,6 +4426,31 @@ INT wifi_setApManagementFramePowerControl(INT apIndex, INT dBm)
     return RETURN_OK;
 }
 
+INT platform_get_radio_tx_power(INT radioIndex, ULONG *tx_power)
+{
+    char interface_name[32] = { 0 };
+    int qtxpower = 0;
+
+    if (tx_power == NULL ||
+        get_interface_name_from_radio_index((uint8_t)radioIndex, interface_name) != RETURN_OK) {
+        wifi_hal_error_print("%s:%d: Failed to get interface name for radio index: %d\n", __func__,
+            __LINE__, radioIndex);
+        return RETURN_ERR;
+    }
+
+    if (wl_iovar_getint(interface_name, "qtxpower", &qtxpower) < 0) {
+        wifi_hal_error_print("%s:%d: Failed to get qtxpower for %s, err: %d (%s)\n", __func__,
+            __LINE__, interface_name, errno, strerror(errno));
+        return RETURN_ERR;
+    }
+
+    /* Bits 6:0 are quarter-dBm, bit 7 is the override flag */
+    *tx_power = (ULONG)((qtxpower & 0x7f) / 4);
+    wifi_hal_info_print("%s:%d: radio %d (%s) tx power from qtxpower: %lu dBm\n", __func__,
+        __LINE__, radioIndex, interface_name, *tx_power);
+    return RETURN_OK;
+}
+
 INT wifi_getRadioTransmitPower(INT radioIndex, ULONG *tx_power)
 {
     return wifi_hal_getRadioTransmitPower(radioIndex, tx_power);
